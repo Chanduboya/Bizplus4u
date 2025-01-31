@@ -1,0 +1,36 @@
+const express = require("express");
+const app = express();
+app.use(express.json());
+
+// Sample roles and permissions
+const roles = {
+  admin: ["create_user", "delete_user", "view_dashboard"],
+  user: ["view_dashboard"],
+};
+
+// Middleware to check permissions
+function checkPermission(permission) {
+  return (req, res, next) => {
+    const userRole = req.headers["role"]; // Assume role is sent in request headers
+    if (roles[userRole] && roles[userRole].includes(permission)) {
+      return next();
+    }
+    return res.status(403).json({ message: "Forbidden" });
+  };
+}
+
+// Protected routes
+app.get("/dashboard", checkPermission("view_dashboard"), (req, res) => {
+  res.json({ message: "Welcome to the dashboard!" });
+});
+
+app.post("/user", checkPermission("create_user"), (req, res) => {
+  res.json({ message: "User created successfully!" });
+});
+
+app.delete("/user", checkPermission("delete_user"), (req, res) => {
+  res.json({ message: "User deleted successfully!" });
+});
+
+// Start server
+app.listen(3000, () => console.log("Server running on port 3000"));
